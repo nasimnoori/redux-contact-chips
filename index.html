@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Redux Contact Chips</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="mystyle.css">
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="inputForm">
+          <input type="text" id="name" placeholder="Name" />
+          <select id="gender">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+          <input type="email" id="email" placeholder="Email" />
+          <button id='contactBtn'>Add Contact</button>
+        </div>
+      </header>
+      <main id="contacts">
+        <div class="alert">
+          <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+          <strong>Info!</strong> Your contact list is empty...
+        </div>
+      </main>
+    </div>
+    <script type="text/javascript">
+      //ID GENERATOR
+      function generateId () {
+        return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
+      }
+
+      const ADD_CONTACT = 'ADD_CONTACT'
+      const REMOVE_CONTACT = 'REMOVE_CONTACT'
+      const BLOCK_CONTACT = 'BLOCK_CONTACT'
+
+      //ACTION CREATORS
+      function addContactAction (contact) {
+        return {
+          type: ADD_CONTACT,
+          contact,
+        }
+      }
+
+      function removeContactAction (id) {
+        return {
+          type: REMOVE_CONTACT,
+          id,
+        }
+      }
+
+      function blockContactAction (id) {
+        return {
+          type: BLOCK_CONTACT,
+          id,
+        }
+      }
+
+      //REDUCERS
+      function contact (state = [], action) {
+        switch(action.type) {
+          case ADD_CONTACT :
+            return state.concat([action.contact])
+          case REMOVE_CONTACT :
+            return state.filter((contact) => contact.id !== action.id)
+          case BLOCK_CONTACT :
+            return state.map((contact) => contact.id !== action.id ? contact :
+              Object.assign({}, contact, { block: !contact.block }))
+          default :
+            return state
+        }
+      }
+
+      const store = Redux.createStore(contact)
+
+      store.subscribe(() => {
+        console.log('The new state is: ', store.getState())
+        //const { contacts } = store.getState()
+        document.getElementById('contacts').innerHTML = ''
+        store.getState().forEach(addContactsToDOM)
+      })
+
+      function addContact () {
+        const name = document.getElementById('name').value
+        const gender = document.getElementById('gender').value
+        const email = document.getElementById('email').value
+        name.value = ''
+        store.dispatch(addContactAction({
+           id: generateId(),
+           name,
+           gender,
+           email,
+           block: false,
+         }))
+       }
+
+       document.getElementById('contactBtn').addEventListener('click', addContact)
+
+       function createRemoveButton (onClick) {
+         const removeBtn = document.createElement('span')
+         removeBtn.classList.add('closebtn')
+         removeBtn.innerHTML = '&times;'
+         removeBtn.addEventListener('click', onClick)
+         return removeBtn
+       }
+
+       function addContactsToDOM (contact) {
+         const node = document.createElement('div')
+         node.classList.add('chip')
+         const img = document.createElement('IMG')
+         const maleImg = "img_avatar.png"
+         const femaleImg = "img_avatar2.png"
+         const image = contact.gender === 'male' ? maleImg : femaleImg
+         img.setAttribute("src", image)
+         img.setAttribute("width", "96")
+         img.setAttribute("height", "96")
+         img.setAttribute("alt", "")
+
+         const text = document.createTextNode(contact.name)
+
+         const blockSwitch = document.createElement('label')
+         blockSwitch.classList.add('switch')
+         const checkbox = document.createElement('input')
+         checkbox.setAttribute("type", "checkbox")
+         blockSwitch.appendChild(checkbox)
+         const sliderSpan = document.createElement('span')
+         sliderSpan.classList.add('slider')
+         sliderSpan.classList.add('round')
+         blockSwitch.appendChild(sliderSpan)
+
+         const removeBtn = createRemoveButton(() => {
+         store.dispatch(removeContactAction(contact.id))
+         })
+
+         node.appendChild(img)
+         node.appendChild(text)
+         node.appendChild(blockSwitch)
+         node.appendChild(removeBtn)
+         checkbox.checked = contact.block ? true : false
+
+         checkbox.addEventListener('click', () => {
+            store.dispatch(blockContactAction(contact.id))
+          })
+       document.getElementById('contacts').appendChild(node)
+       }
+
+    </script>
+  </body>
+</html>
