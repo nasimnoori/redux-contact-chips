@@ -88,22 +88,22 @@
       }
       //this middleware method checks the action show a message and then dispath
       //the action. and we will use this as the normal dispath method
-      function checkAndDispatch (store, action) {
+      const checker = (store) => (next) => (action) => {
         if (action.type === ADD_CONTACT) {
-          store.dispatch(action)
+          next(action)
           return popupMessage(action.contact.name,' added!')
         }
 
         if (action.type === REMOVE_CONTACT) {
           //const name = action.contact.name
-          store.dispatch(action)
+          next(action)
           return popupMessage('A contact was', ' removed')
         }
 
         // TODO: ceate message for block unblock
       }
 
-      const store = Redux.createStore(contact)
+      const store = Redux.createStore(contact, Redux.applyMiddleware(checker))
 
       store.subscribe(() => {
         console.log('The new state is: ', store.getState())
@@ -117,7 +117,7 @@
         const gender = document.getElementById('gender').value
         const email = document.getElementById('email').value
         name.value = ''
-        checkAndDispatch(store, addContactAction({
+        store.dispatch(addContactAction({
            id: generateId(),
            name,
            gender,
@@ -163,7 +163,7 @@
          blockSwitch.appendChild(sliderSpan)
 
          const removeBtn = createRemoveButton(() => {
-           checkAndDispatch(store, removeContactAction(contact.id))
+           store.dispatch(removeContactAction(contact.id))
          })
 
          node.appendChild(img)
