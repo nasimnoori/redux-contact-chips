@@ -103,10 +103,21 @@
         // TODO: ceate message for block unblock
       }
 
-      const store = Redux.createStore(contact, Redux.applyMiddleware(checker))
+      //This logger middleware helps us in development process it tells us
+      //which action owas dispatched and what is our current sate
+      const logger = (store) => (next) => (action) => {
+        console.group(action.type)
+          console.log('The action: ', action)
+          const result = next(action)
+          console.log('The new state: ', store.getState())
+        console.groupEnd()
+        return result
+      }
+
+      const store = Redux.createStore(contact, Redux.applyMiddleware(checker, logger))
 
       store.subscribe(() => {
-        console.log('The new state is: ', store.getState())
+        //console.log('The new state is: ', store.getState())
         //const { contacts } = store.getState()
         document.getElementById('contacts').innerHTML = ''
         store.getState().forEach(addContactsToDOM)
