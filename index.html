@@ -58,7 +58,7 @@
         }
       }
 
-      //REDUCERS
+      //REDUCER
       function contact (state = [], action) {
         switch(action.type) {
           case ADD_CONTACT :
@@ -71,6 +71,36 @@
           default :
             return state
         }
+      }
+
+      //helper method to generate blockedMessage
+      function popupMessage (name, msg) {
+        const div = document.createElement('div')
+        div.setAttribute('id', 'snackbar')
+        div.classList.add('show')
+        setTimeout(() => {
+          div.classList.remove('show')
+        }, 3000)
+        const message = document.createTextNode(name+msg)
+        div.appendChild(message)
+        document.getElementById('contacts').appendChild(div)
+        return div
+      }
+      //this middleware method checks the action show a message and then dispath
+      //the action. and we will use this as the normal dispath method
+      function checkAndDispatch (store, action) {
+        if (action.type === ADD_CONTACT) {
+          store.dispatch(action)
+          return popupMessage(action.contact.name,' added!')
+        }
+
+        if (action.type === REMOVE_CONTACT) {
+          //const name = action.contact.name
+          store.dispatch(action)
+          return popupMessage('A contact was', ' removed')
+        }
+
+        // TODO: ceate message for block unblock
       }
 
       const store = Redux.createStore(contact)
@@ -87,7 +117,7 @@
         const gender = document.getElementById('gender').value
         const email = document.getElementById('email').value
         name.value = ''
-        store.dispatch(addContactAction({
+        checkAndDispatch(store, addContactAction({
            id: generateId(),
            name,
            gender,
@@ -105,6 +135,8 @@
          removeBtn.addEventListener('click', onClick)
          return removeBtn
        }
+
+
 
        function addContactsToDOM (contact) {
          const node = document.createElement('div')
@@ -131,7 +163,7 @@
          blockSwitch.appendChild(sliderSpan)
 
          const removeBtn = createRemoveButton(() => {
-         store.dispatch(removeContactAction(contact.id))
+           checkAndDispatch(store, removeContactAction(contact.id))
          })
 
          node.appendChild(img)
@@ -143,7 +175,9 @@
          checkbox.addEventListener('click', () => {
             store.dispatch(blockContactAction(contact.id))
           })
-       document.getElementById('contacts').appendChild(node)
+          document.getElementById('contacts').appendChild(node)
+
+          //contact.block ? blockedMessage('user was blocked') : blockedMessage('unblocked')
        }
 
     </script>
